@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import LoginSection from "../section/login/loginSection";
 
 const LoginPage = () => {
   useEffect(() => {
@@ -7,7 +8,7 @@ const LoginPage = () => {
 
   return (
     <>
-      <h1>Login</h1>
+      <LoginSection />
     </>
   );
 };
