@@ -1,5 +1,6 @@
 package com.loyalbridge.backend.config;
 
+import com.loyalbridge.backend.security.CustomAuthenticationEntyPoint;
 import com.loyalbridge.backend.security.JwtAuthFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -19,9 +20,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntyPoint customAuthenticationEntryPoint;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthenticationFilter, CustomAuthenticationEntyPoint customAuthenticationEntryPoint) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
     }
 
     @Bean
@@ -49,8 +52,7 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
                 );
 
         return http.build();

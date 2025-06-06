@@ -36,44 +36,56 @@ public class AdminUserController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Object>> login(@RequestBody LoginRequest request) {
-        boolean isValid = adminUserService.validateEmailAndPassword(
-                request.getEmail(),
-                request.getPassword()
-        );
-
-        if (isValid) {
-            otpService.generateOtpForEmail(request.getEmail());
-            return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Login successful. Proceed to OTP verification.", null)
+        try {
+            boolean isValid = adminUserService.validateEmailAndPassword(
+                    request.getEmail(),
+                    request.getPassword()
             );
-        } else {
-            return ResponseEntity.status(401).body(
-                    new ApiResponse<>(false, "Invalid email or password", null)
+
+            if (isValid) {
+                otpService.generateOtpForEmail(request.getEmail());
+                return ResponseEntity.ok(
+                        new ApiResponse<>(true, "Login successful. Proceed to OTP verification.", null)
+                );
+            } else {
+                return ResponseEntity.status(401).body(
+                        new ApiResponse<>(false, "Invalid email or password", null)
+                );
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    new ApiResponse<>(false, "Internal server error: " + e.getMessage(), null)
             );
         }
     }
 
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<Object>> verifyOtp(@RequestBody OtpRequest request) {
-        boolean isValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+        try {
+            boolean isValid = otpService.verifyOtp(request.getEmail(), request.getOtp());
 
-        if (isValid) {
-            otpService.clearOtp(request.getEmail());
-            AdminUser user = adminUserService.getByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            if (isValid) {
+                otpService.clearOtp(request.getEmail());
+                AdminUser user = adminUserService.getByEmail(request.getEmail())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
-            String token = jwtTokenUtil.generateToken(
-                    user.getEmail(),
-                    user.getUserName(),
-                    user.getRole().getName().name()
-            );
+                String token = jwtTokenUtil.generateToken(
+                        user.getEmail(),
+                        user.getUserName(),
+                        user.getRole().getName().name()
+                );
 
-            return ResponseEntity.ok(
-                    new ApiResponse<>(true, "OTP verified successfully", token )
-            );
-        } else {
-            return ResponseEntity.status(401).body(
-                    new ApiResponse<>(false, "Invalid OTP or email", null)
+                return ResponseEntity.ok(
+                        new ApiResponse<>(true, "OTP verified successfully", token)
+                );
+            } else {
+                return ResponseEntity.status(401).body(
+                        new ApiResponse<>(false, "Invalid OTP or email", null)
+                );
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    new ApiResponse<>(false, "Internal server error: " + e.getMessage(), null)
             );
         }
     }
